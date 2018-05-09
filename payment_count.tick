@@ -1,0 +1,18 @@
+dbrp "example"."autogen"
+
+stream
+    |from()
+        .database('example')
+        .measurement('payments')
+        .groupBy(*)
+    |window()
+        .period(5m)
+        .every(1m)
+        .align()
+    |count('amount')
+        .as('count')
+    |influxDBOut()
+        .database('example')
+        .retentionPolicy('autogen')
+        .measurement('payment_count')
+        .precision('s')

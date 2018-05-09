@@ -1,0 +1,24 @@
+dbrp "example"."autogen"
+
+// Get stream data
+var data = stream
+    |from()
+        .measurement('payments')
+    |count('amount')
+
+//Get the payments that were STP total
+var txns = stream
+  |from()
+       .measurement('stp_txns')
+  |count('amount')
+
+
+// Join errors and views
+txns
+    |join(data)
+        .as('txns', 'data')
+    |eval(lambda: "txns.count" / "data.count")
+        .as('percent')
+    |influxDBOut()
+        .database('example')
+        .measurement('stp_rate')

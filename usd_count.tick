@@ -1,0 +1,19 @@
+dbrp "example"."autogen"
+
+stream
+    |from()
+        .database('example')
+        .measurement('payments')
+        .where(lambda: "currency" == 'USD')
+        .groupBy(*)
+    |window()
+        .period(5m)
+        .every(1m)
+        .align()
+    |count('amount')
+        .as('count')
+    |influxDBOut()
+        .database('example')
+        .retentionPolicy('autogen')
+        .measurement('usd_count')
+        .precision('s')

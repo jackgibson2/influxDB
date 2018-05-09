@@ -1,0 +1,25 @@
+dbrp "example"."autogen"
+
+var txn_cnt = stream
+    |from()
+        .database('example')
+        .measurement('payments')
+
+var usd_cnt = stream
+    |from()
+        .database('example')
+        .measurement('usd_count')
+
+usd_cnt
+    |join(txn_cnt)
+        .as('usd_txns','all_txns')
+        .tolerance(1s)
+        .fill(0.0)
+        .streamName('usd_rate')
+    |eval(lambda: "usd_txns.count" / "all_txns.count")
+        .as('rate')                         
+    |influxDBOut()
+        .database('example')
+        .retentionPolicy('autogen')
+        .measurement('usd_rate')
+        .precision('s')
